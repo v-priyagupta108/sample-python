@@ -1,0 +1,45 @@
+name: Python workflow
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.arch }}${{ matrix.freethreaded && ' (freethreaded)' || '' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest,  arch: x64 }
+          - { os: windows-latest,  arch: x86 }
+          - { os: windows-latest,  arch: x86,   freethreaded: true  }
+          - { os: windows-11-arm,  arch: arm64 }
+          - { os: windows-11-arm,  arch: arm64, freethreaded: true  }
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Set up Python 3.16.0-alpha.1
+      # uses: actions/setup-python@v7
+      uses: v-priya-kinthali/setup-python@test-413-pr
+      with:
+        python-version: 3.16.0-alpha.1
+        architecture: ${{ matrix.arch }}
+        freethreaded: ${{ matrix.freethreaded }}
+
+    - name: Display Python version
+      run: python -VV
+
+    - name: Verify architecture and free-threading
+      shell: pwsh
+      run: |
+        python -c "import sys, platform, sysconfig; print('machine:', platform.machine()); print('64-bit:', sys.maxsize > 2**32); print('freethreaded:', bool(sysconfig.get_config_var('Py_GIL_DISABLED')))"
+
+    - name: Check pip
+      shell: pwsh
+      run: |
+        (Get-Command pip).Path
+        pip --version
+        pip install requests
