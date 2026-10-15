@@ -13,10 +13,11 @@ jobs:
       matrix:
         include:
           - { os: windows-latest, arch: x64,   freethreaded: 'false' }
+          - { os: windows-latest, arch: x64,   freethreaded: 'true'  }
           - { os: windows-latest, arch: x86,   freethreaded: 'false' }
           - { os: windows-latest, arch: x86,   freethreaded: 'true'  }
           - { os: windows-11-arm, arch: arm64, freethreaded: 'false' }
-          
+          - { os: windows-11-arm, arch: arm64, freethreaded: 'true'  }
 
     steps:
     - uses: actions/checkout@v7
@@ -33,8 +34,12 @@ jobs:
 
     - name: Verify architecture and free-threading
       shell: pwsh
+      env:
+        EXPECT_FREETHREADED: ${{ matrix.freethreaded }}
       run: |
-        python -c "import sys, platform, sysconfig; print('machine:', platform.machine()); print('64-bit:', sys.maxsize > 2**32); print('freethreaded:', bool(sysconfig.get_config_var('Py_GIL_DISABLED')))"
+        (Get-Command python).Path
+        python -c "import os, sys, platform, sysconfig; ft = bool(sysconfig.get_config_var('Py_GIL_DISABLED')); exp = os.environ['EXPECT_FREETHREADED'] == 'true'; print('machine:', platform.machine()); print('64-bit:', sys.maxsize > 2**32); print('freethreaded:', ft, '(expected:', exp, ')'); sys.exit(0 if ft == exp else 1)"
+        if ($LASTEXITCODE -ne 0) { throw "python.exe is not the expected build" }
 
     - name: Check pip
       shell: pwsh
