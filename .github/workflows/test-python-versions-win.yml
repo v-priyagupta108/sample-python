@@ -6,23 +6,22 @@ on:
 
 jobs:
   build:
-    name: ${{ matrix.arch }}${{ matrix.freethreaded && ' (freethreaded)' || '' }}
+    name: ${{ matrix.arch }}${{ matrix.freethreaded == 'true' && ' (freethreaded)' || '' }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { os: windows-latest,  arch: x64 }
-          - { os: windows-latest,  arch: x86 }
-          - { os: windows-latest,  arch: x86,   freethreaded: true  }
-          - { os: windows-11-arm,  arch: arm64 }
-          - { os: windows-11-arm,  arch: arm64, freethreaded: true  }
+          - { os: windows-latest, arch: x64,   freethreaded: 'false' }
+          - { os: windows-latest, arch: x86,   freethreaded: 'false' }
+          - { os: windows-latest, arch: x86,   freethreaded: 'true'  }
+          - { os: windows-11-arm, arch: arm64, freethreaded: 'false' }
+          
 
     steps:
     - uses: actions/checkout@v7
 
     - name: Set up Python 3.16.0-alpha.1
-      # uses: actions/setup-python@v7
       uses: v-priya-kinthali/setup-python@test-413-pr
       with:
         python-version: 3.16.0-alpha.1
